@@ -23,7 +23,7 @@ public class PrivateKey {
         return n;
     }
 
-    public String decryptString(String ciphertext) {
-        return "lol";
+    public byte[] decrypt(byte[] cipherText) {
+        return RSAUtils.modPowByte(cipherText, d, n);
     }
 }

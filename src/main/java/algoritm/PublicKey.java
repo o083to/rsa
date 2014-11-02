@@ -1,21 +1,19 @@
 package algoritm;
 
 import java.math.BigInteger;
-import java.util.ArrayList;
 
 /**
+ * Открытый ключ.
  * Created by anna on 31.10.14.
  */
 public class PublicKey {
 
     private BigInteger e;
     private BigInteger n;
-    private int blockLengthInBytes;
 
     public PublicKey(BigInteger e, BigInteger n) {
         this.e = e;
         this.n = n;
-        blockLengthInBytes = n.bitLength() / 8 - 1;
     }
 
     public BigInteger getE() {
@@ -26,14 +24,12 @@ public class PublicKey {
         return n;
     }
 
-    public int getBlockLengthInBytes() {
-        return blockLengthInBytes;
+    public byte[] encrypt(byte[] plainText) {
+        byte[] cipherText = RSAUtils.modPowByte(plainText, e, n);
+        for (int i = 0; i < plainText.length; i++) {
+            plainText[i] = 0;
+        }
+        return cipherText;
     }
 
-    public String encryptString(String plainText) {
-        byte[] plainBytes = plainText.getBytes();
-        ArrayList<Byte> cipherBytes;
-
-        return "lol";
-    }
 }
