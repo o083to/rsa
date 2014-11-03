@@ -1,4 +1,4 @@
-package algoritm;
+package algoritm.rsa;
 
 import java.math.BigInteger;
 
