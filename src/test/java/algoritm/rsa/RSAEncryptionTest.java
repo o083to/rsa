@@ -1,4 +1,4 @@
-package algoritm;
+package algoritm.rsa;
 
 import algoritm.rsa.PrivateKey;
 import algoritm.rsa.PublicKey;

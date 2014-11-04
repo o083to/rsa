@@ -1,6 +1,5 @@
-package algoritm;
+package algoritm.rsa;
 
-import algoritm.rsa.RSAUtils;
 import org.junit.Test;
 
 import java.math.BigInteger;

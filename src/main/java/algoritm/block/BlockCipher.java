@@ -1,6 +1,7 @@
 package algoritm.block;
 
-import java.nio.ByteBuffer;
+import algoritm.utils.CipherUtils;
+
 import java.security.SecureRandom;
 
 /**
@@ -10,6 +11,7 @@ import java.security.SecureRandom;
 public class BlockCipher {
 
     public static final int ROUND_KEY_BIT_LENGTH = 32;
+    public static final int BLOCK_SIZE = 8;
 
     private static final int INTEGER_SIZE = 4;
     private static final String INVALID_BIT_LENGTH_MESSAGE = "Bit length of key must be 128, 256 or 512. Actual length: ";
@@ -19,10 +21,10 @@ public class BlockCipher {
     private final int[] keys;
 
     public BlockCipher(int bitLength) {
-        if (bitLength == 128 || bitLength == 265 || bitLength == 512) {
+        if (bitLength == 128 || bitLength == 256 || bitLength == 512) {
             roundsCount = bitLength / ROUND_KEY_BIT_LENGTH;
             byteKeys = generateByteKeys(roundsCount * INTEGER_SIZE);
-            keys = convertByteKeysToInt(byteKeys, roundsCount);
+            keys = CipherUtils.convertBytesToInts(byteKeys);
         } else {
             throw new IllegalArgumentException(INVALID_BIT_LENGTH_MESSAGE + bitLength);
         }
@@ -32,9 +34,46 @@ public class BlockCipher {
         roundsCount = keyBytes.length / INTEGER_SIZE;
         if (roundsCount == 4 || roundsCount == 8 || roundsCount == 16) {
             byteKeys = keyBytes;
-            keys = convertByteKeysToInt(byteKeys, roundsCount);
+            keys = CipherUtils.convertBytesToInts(byteKeys);
         } else {
             throw new IllegalArgumentException(INVALID_BIT_LENGTH_MESSAGE + keyBytes.length * 8);
+        }
+    }
+
+    byte[] encrypt(byte[] source) {
+        int[] blocks = CipherUtils.bytesToIntsPadding(source);
+        for (int i = 0; i < blocks.length; i += 2) {
+            encryptBlock(blocks, i, i + 1);
+        }
+        return CipherUtils.convertIntsToBytes(blocks);
+    }
+
+    byte[] decrypt(byte[] cipher) {
+        int[] blocks = CipherUtils.convertBytesToInts(cipher);
+        for (int i = 0; i < blocks.length; i += 2) {
+            decryptBlock(blocks, i, i + 1);
+        }
+        byte[] bytes = CipherUtils.convertIntsToBytes(blocks);
+        if (bytes[bytes.length - 1] >= 8) {
+            return bytes;
+        } else {
+            return CipherUtils.removePadding(bytes);
+        }
+    }
+
+    void encryptBlock(int[] data, int left, int right) {
+        for (int i = 0; i < roundsCount; i++) {
+            int tmp = data[right] ^ function(data[left], keys[i]);
+            data[right] = data[left];
+            data[left] = tmp;
+        }
+    }
+
+    void decryptBlock(int[] data, int left, int right) {
+        for (int i = roundsCount - 1; i >= 0; i--) {
+            int tmp = data[left] ^ function(data[right], keys[i]);
+            data[left] = data[right];
+            data[right] = tmp;
         }
     }
 
@@ -53,15 +92,7 @@ public class BlockCipher {
         return byteKeys;
     }
 
-    private int[] convertByteKeysToInt(byte[] byteKeys, int count) {
-        int[] keys = new int[count];
-        for (int i = 0; i < byteKeys.length; i += INTEGER_SIZE) {
-            keys[i] = ByteBuffer.wrap(byteKeys, i, INTEGER_SIZE).getInt();
-        }
-        return keys;
-    }
-
-    private int function(int txt, int key) {
+    int function(int txt, int key) {
         return Integer.rotateLeft((key & 0xA55AAA55) | (txt & 0x5AA555AA), 16);
     }
 }
