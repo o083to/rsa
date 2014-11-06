@@ -23,7 +23,7 @@ public class BlockCipher {
     public BlockCipher(int bitLength) {
         if (bitLength == 128 || bitLength == 256 || bitLength == 512) {
             roundsCount = bitLength / ROUND_KEY_BIT_LENGTH;
-            byteKeys = generateByteKeys(roundsCount * INTEGER_SIZE);
+            byteKeys = CipherUtils.generateRandomBytes(roundsCount * INTEGER_SIZE);
             keys = CipherUtils.convertBytesToInts(byteKeys);
         } else {
             throw new IllegalArgumentException(INVALID_BIT_LENGTH_MESSAGE + bitLength);
@@ -40,25 +40,33 @@ public class BlockCipher {
         }
     }
 
-    byte[] encrypt(byte[] source) {
-        int[] blocks = CipherUtils.bytesToIntsPadding(source);
+    public byte[] encrypt(byte[] source, boolean isLastBlock) {
+        int[] blocks = CipherUtils.bytesToIntsWithPad(source);
         for (int i = 0; i < blocks.length; i += 2) {
             encryptBlock(blocks, i, i + 1);
         }
-        return CipherUtils.convertIntsToBytes(blocks);
+        byte[] bytes = CipherUtils.convertIntsToBytes(blocks);
+        if (isLastBlock) {
+            int padCount = CipherUtils.paddingSize(source.length);
+            byte[] tmp = new byte[bytes.length + 1];
+            System.arraycopy(bytes, 0, tmp, 0, bytes.length);
+            tmp[tmp.length - 1] = (byte)padCount;
+            bytes = tmp;
+        }
+        return bytes;
     }
 
-    byte[] decrypt(byte[] cipher) {
+    public byte[] decrypt(byte[] cipher, int padCount) {
+        byte[] decrypted = decrypt(cipher);
+        return CipherUtils.removePadding(decrypted, padCount);
+    }
+
+    public byte[] decrypt(byte[] cipher) {
         int[] blocks = CipherUtils.convertBytesToInts(cipher);
         for (int i = 0; i < blocks.length; i += 2) {
             decryptBlock(blocks, i, i + 1);
         }
-        byte[] bytes = CipherUtils.convertIntsToBytes(blocks);
-        if (bytes[bytes.length - 1] >= 8) {
-            return bytes;
-        } else {
-            return CipherUtils.removePadding(bytes);
-        }
+        return CipherUtils.convertIntsToBytes(blocks);
     }
 
     void encryptBlock(int[] data, int left, int right) {
@@ -82,13 +90,6 @@ public class BlockCipher {
     }
 
     public byte[] getKey() {
-        return byteKeys;
-    }
-
-    private byte[] generateByteKeys(int count) {
-        byte[] byteKeys = new byte[count];
-        SecureRandom random = new SecureRandom();
-        random.nextBytes(byteKeys);
         return byteKeys;
     }
 

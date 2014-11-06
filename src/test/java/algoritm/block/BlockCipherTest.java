@@ -1,5 +1,6 @@
 package algoritm.block;
 
+import algoritm.utils.CipherUtils;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
@@ -25,16 +26,41 @@ public class BlockCipherTest {
     }
 
     @Test
-    public void lol() {
-        String lol = "This is ****ing string";
-        BlockCipher cipher = new BlockCipher(128);
-        byte[] b1 = cipher.encrypt(lol.getBytes());
-        String s1 = new String(b1);
-        System.out.println("\n\n\n" + s1.length());
-        byte[] b2 = cipher.decrypt(b1);
-        String s2 = new String(b2);
-        System.out.println(s2.length());
-        assertEquals(lol, s2);
+    public void encryptDecryptStringTest128() {
+        encryptDecryptStringTest(128);
+    }
+
+    @Test
+    public void encryptDecryptStringTest256() {
+        encryptDecryptStringTest(256);
+    }
+
+    @Test
+    public void encryptDecryptStringTest512() {
+        encryptDecryptStringTest(512);
+    }
+
+    private void encryptDecryptStringTest(int bitLength) {
+        String secret = "This is 1234567 string";
+        System.out.println("Key bit length: " + bitLength);
+        System.out.println("Message: " + secret);
+        BlockCipher cipher = new BlockCipher(bitLength);
+
+        byte[] secretBytes = secret.getBytes();
+        int padSize = CipherUtils.paddingSize(secretBytes.length);
+        System.out.println("Padding: " + padSize);
+
+        byte[] encrypted = cipher.encrypt(secretBytes, true);
+        String encStr = new String(encrypted);
+        System.out.println("Encrypted: " + encStr);
+        System.out.println("Length: " + encStr.length());
+
+        byte[] decrypted = cipher.decrypt(encrypted, padSize);
+        String result = new String(decrypted);
+        System.out.println("Decrypted: " + result);
+        System.out.println("Length: " + result.length());
+
+        assertEquals(secret, result);
     }
 
     private void encryptDecryptBlockTest(int bitLength) {
