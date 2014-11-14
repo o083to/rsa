@@ -1,8 +1,5 @@
 package algoritm.rsa;
 
-import algoritm.rsa.PrivateKey;
-import algoritm.rsa.PublicKey;
-import algoritm.rsa.RSAKeyPair;
 import org.junit.*;
 
 import static org.junit.Assert.*;
